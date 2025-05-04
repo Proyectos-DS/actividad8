@@ -205,3 +205,30 @@ def test_vaciar():
     assert carrito.obtener_items() == []
     assert carrito.calcular_total() == 0
     
+
+def test_aplicar_descuento_condicional_cumplido():
+
+    # Arrange
+    carrito = Carrito()
+    producto = ProductoFactory(nombre="Laptop", precio=3800.00)
+    carrito.agregar_producto(producto, cantidad=1)
+
+    # Act
+    total_con_descuento = carrito.aplicar_descuento_condicional(15, 3000)
+
+    # Assert
+    assert total_con_descuento == 3230
+
+
+def test_aplicar_descuento_condicional_no_cumplido():
+
+    # Arrange
+    carrito = Carrito()
+    producto = ProductoFactory(nombre="Laptop", precio=3800.00)
+    carrito.agregar_producto(producto, cantidad=1)
+
+    # Act
+    total_con_descuento = carrito.aplicar_descuento_condicional(15, 4000)
+
+    # Assert
+    assert total_con_descuento == 3800
