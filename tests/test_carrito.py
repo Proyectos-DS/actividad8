@@ -56,7 +56,7 @@ def test_remover_producto():
     """
     # Arrange
     carrito = Carrito()
-    producto = ProductoFactory(nombre="Teclado", precio=75.00)
+    producto = ProductoFactory(nombre="Teclado", precio=75.00, stock=5)
     carrito.agregar_producto(producto, cantidad=3)
     
     # Act
@@ -232,3 +232,29 @@ def test_aplicar_descuento_condicional_no_cumplido():
 
     # Assert
     assert total_con_descuento == 3800
+
+
+    
+def test_agregar_producto_hay_stock():
+    
+    # Arrange
+    carrito = Carrito()
+    producto = ProductoFactory(nombre="Laptop", precio=3800.00, stock=10)
+
+    # Act
+    carrito.agregar_producto(producto, cantidad=5)
+
+    # Assert
+    assert producto.stock == 5
+
+def test_agregar_producto_supera_stock():
+    
+    # Arrange
+    carrito = Carrito()
+    producto = ProductoFactory(nombre="Laptop", precio=3800.00, stock=10)
+
+    # Act
+    with pytest.raises(ValueError) as excinfo:
+        carrito.agregar_producto(producto, cantidad=15)
+    # Assert
+    assert str(excinfo.value) == f"Cantidad supera a stock de {producto.nombre}, solo hay {producto.stock} unidades"
