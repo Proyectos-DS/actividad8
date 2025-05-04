@@ -1,0 +1,9 @@
+# pycache
+src/__pycache__/
+tests/__pycache__/
+
+# coverage
+.coverage
+
+# Entorno virtual
+.venv
