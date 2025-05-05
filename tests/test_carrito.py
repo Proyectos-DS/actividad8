@@ -5,7 +5,7 @@ import pytest
 from src.carrito import Carrito, Producto
 from src.factories import ProductoFactory
 
-def test_agregar_producto_nuevo():
+def test_agregar_producto_nuevo(carrito_vacio):
     """
     AAA:
     Arrange: Se crea un carrito y se genera un producto.
@@ -13,14 +13,13 @@ def test_agregar_producto_nuevo():
     Assert: Se verifica que el carrito contiene un item con el producto y cantidad 1.
     """
     # Arrange
-    carrito = Carrito()
     producto = ProductoFactory(nombre="Laptop", precio=1000.00)
     
     # Act
-    carrito.agregar_producto(producto)
+    carrito_vacio.agregar_producto(producto)
     
     # Assert
-    items = carrito.obtener_items()
+    items = carrito_vacio.obtener_items()
     assert len(items) == 1
     assert items[0].producto.nombre == "Laptop"
     assert items[0].cantidad == 1
@@ -35,7 +34,7 @@ def test_agregar_producto_existente_incrementa_cantidad():
     """
     # Arrange
     carrito = Carrito()
-    producto = ProductoFactory(nombre="Mouse", precio=50.00)
+    producto = ProductoFactory(nombre="Mouse", precio=50.00, stock=10)
     carrito.agregar_producto(producto, cantidad=1)
     
     # Act
@@ -187,92 +186,104 @@ def test_aplicar_descuento_limites():
         carrito.aplicar_descuento(-5)
 
 
-def test_vaciar():
+def test_vaciar(carrito_con_productos):
 
     # Arrange
-    carrito = Carrito()
-    producto1 = ProductoFactory(nombre="Laptop", precio=3800.00)
-    carrito.agregar_producto(producto1, cantidad=1)
-    producto2 = ProductoFactory(nombre="Audifonos", precio=200.00)
-    carrito.agregar_producto(producto2, cantidad=2)
-    producto3 = ProductoFactory(nombre="Tablet", precio=800.00)
-    carrito.agregar_producto(producto3, cantidad=3)
+    # carrito = Carrito()
+    # producto1 = ProductoFactory(nombre="Laptop", precio=3800.00)
+    # carrito.agregar_producto(producto1, cantidad=1)
+    # producto2 = ProductoFactory(nombre="Audifonos", precio=200.00)
+    # carrito.agregar_producto(producto2, cantidad=2)
+    # producto3 = ProductoFactory(nombre="Tablet", precio=800.00)
+    # carrito.agregar_producto(producto3, cantidad=3)
+    assert carrito_con_productos.contar_items() > 0
 
     # Act
-    carrito.vaciar()
+    carrito_con_productos.vaciar()
 
     # Assert
-    assert carrito.obtener_items() == []
-    assert carrito.calcular_total() == 0
+    assert carrito_con_productos.obtener_items() == []
+    assert carrito_con_productos.calcular_total() == 0
+    assert carrito_con_productos.contar_items() == 0
     
 
-def test_aplicar_descuento_condicional_cumplido():
+def test_aplicar_descuento_condicional_cumplido(carrito_con_productos):
 
     # Arrange
-    carrito = Carrito()
-    producto = ProductoFactory(nombre="Laptop", precio=3800.00)
-    carrito.agregar_producto(producto, cantidad=1)
+    # carrito = Carrito()
+    # producto = ProductoFactory(nombre="Laptop", precio=3800.00)
+    # carrito.agregar_producto(producto, cantidad=1)
+    total_sin_descuento = carrito_con_productos.calcular_total()
 
     # Act
-    total_con_descuento = carrito.aplicar_descuento_condicional(15, 3000)
+    # total_con_descuento = carrito.aplicar_descuento_condicional(15, 3000)
+    total_con_descuento = carrito_con_productos.aplicar_descuento_condicional(15, 3000)
 
     # Assert
-    assert total_con_descuento == 3230
+    assert total_con_descuento == total_sin_descuento * 0.85
 
 
-def test_aplicar_descuento_condicional_no_cumplido():
+def test_aplicar_descuento_condicional_no_cumplido(carrito_con_productos):
 
     # Arrange
-    carrito = Carrito()
-    producto = ProductoFactory(nombre="Laptop", precio=3800.00)
-    carrito.agregar_producto(producto, cantidad=1)
+    # carrito = Carrito()
+    # producto = ProductoFactory(nombre="Laptop", precio=3800.00)
+    # carrito.agregar_producto(producto, cantidad=1)
+    total_sin_descuento = carrito_con_productos.calcular_total()
 
     # Act
-    total_con_descuento = carrito.aplicar_descuento_condicional(15, 4000)
+    # total_con_descuento = carrito.aplicar_descuento_condicional(15, 4000)
+    total_con_descuento = carrito_con_productos.aplicar_descuento_condicional(15, 9000)
 
     # Assert
-    assert total_con_descuento == 3800
+    assert total_con_descuento == total_sin_descuento
 
 
     
-def test_agregar_producto_hay_stock():
+def test_agregar_producto_hay_stock(carrito_vacio, producto_laptop):
     
     # Arrange
-    carrito = Carrito()
-    producto = ProductoFactory(nombre="Laptop", precio=3800.00, stock=10)
+    # carrito = Carrito()
+    # producto = ProductoFactory(nombre="Laptop", precio=3800.00, stock=10)
+    assert carrito_vacio.contar_items() == 0
+    stock_producto_laptop = producto_laptop.stock
 
     # Act
-    carrito.agregar_producto(producto, cantidad=5)
+    # carrito.agregar_producto(producto, cantidad=5)
+    cantidad = 5
+    carrito_vacio.agregar_producto(producto_laptop, cantidad=cantidad)
 
     # Assert
-    assert producto.stock == 5
+    assert producto_laptop.stock == stock_producto_laptop - 5
 
-def test_agregar_producto_supera_stock():
+def test_agregar_producto_supera_stock(carrito_vacio, producto_tablet):
     
     # Arrange
-    carrito = Carrito()
-    producto = ProductoFactory(nombre="Laptop", precio=3800.00, stock=10)
+    nombre_producto_tablet = producto_tablet.nombre
+    stock_producto_tablet = producto_tablet.stock
+    cantidad = stock_producto_tablet + 1
 
     # Act
     with pytest.raises(ValueError) as excinfo:
-        carrito.agregar_producto(producto, cantidad=15)
+        carrito_vacio.agregar_producto(producto_tablet, cantidad=cantidad)
     # Assert
-    assert str(excinfo.value) == f"Cantidad supera a stock de {producto.nombre}, solo hay {producto.stock} unidades"
+    assert str(excinfo.value) == f"Cantidad supera a stock de {nombre_producto_tablet}, solo hay {stock_producto_tablet} unidades"
 
 
-def test_obtener_items_ordenados_nombre():
+def test_obtener_items_ordenados_nombre(carrito_con_productos):
 
     # Arrange
-    carrito = Carrito()
-    producto1 = ProductoFactory(nombre="Laptop", precio=3800.00)
-    carrito.agregar_producto(producto1, cantidad=1)
-    producto2 = ProductoFactory(nombre="Audifonos", precio=200.00)
-    carrito.agregar_producto(producto2, cantidad=2)
-    producto3 = ProductoFactory(nombre="Tablet", precio=800.00)
-    carrito.agregar_producto(producto3, cantidad=3)
-
+    # carrito = Carrito()
+    # producto1 = ProductoFactory(nombre="Laptop", precio=3800.00, stock=5)
+    # carrito.agregar_producto(producto1, cantidad=1)
+    # producto2 = ProductoFactory(nombre="Audifonos", precio=200.00, stock=5)
+    # carrito.agregar_producto(producto2, cantidad=2)
+    # producto3 = ProductoFactory(nombre="Tablet", precio=800.00, stock=5)
+    # carrito.agregar_producto(producto3, cantidad=3)
+    assert carrito_con_productos.contar_items() > 0
     # Act
-    items_ordenados = carrito.obtener_items_ordenados(criterio='nombre')
+    # items_ordenados = carrito.obtener_items_ordenados(criterio='nombre')
+    items_ordenados = carrito_con_productos.obtener_items_ordenados(criterio='nombre')
 
     # Assert
     assert items_ordenados[0].producto.nombre == "Audifonos"
@@ -280,19 +291,21 @@ def test_obtener_items_ordenados_nombre():
     assert items_ordenados[2].producto.nombre == "Tablet"
 
 
-def test_obtener_items_ordenados_precio():
+def test_obtener_items_ordenados_precio(carrito_con_productos):
 
     # Arrange
-    carrito = Carrito()
-    producto1 = ProductoFactory(nombre="Laptop", precio=3800.00)
-    carrito.agregar_producto(producto1, cantidad=1)
-    producto2 = ProductoFactory(nombre="Audifonos", precio=200.00)
-    carrito.agregar_producto(producto2, cantidad=2)
-    producto3 = ProductoFactory(nombre="Tablet", precio=800.00)
-    carrito.agregar_producto(producto3, cantidad=3)
+    # carrito = Carrito()
+    # producto1 = ProductoFactory(nombre="Laptop", precio=3800.00)
+    # carrito.agregar_producto(producto1, cantidad=1)
+    # producto2 = ProductoFactory(nombre="Audifonos", precio=200.00)
+    # carrito.agregar_producto(producto2, cantidad=2)
+    # producto3 = ProductoFactory(nombre="Tablet", precio=800.00)
+    # carrito.agregar_producto(producto3, cantidad=3)
+    assert carrito_con_productos.contar_items() > 0
 
     # Act
-    items_ordenados = carrito.obtener_items_ordenados(criterio='precio')
+    # items_ordenados = carrito.obtener_items_ordenados(criterio='precio')
+    items_ordenados = carrito_con_productos.obtener_items_ordenados(criterio='precio')
 
     # Assert
     assert items_ordenados[0].producto.precio == 200
@@ -300,21 +313,22 @@ def test_obtener_items_ordenados_precio():
     assert items_ordenados[2].producto.precio == 3800
 
 
-def test_obtener_items_ordenados_criterio_invalido():
+def test_obtener_items_ordenados_criterio_invalido(carrito_con_productos):
 
     # Arrange
-    carrito = Carrito()
-    producto1 = ProductoFactory(nombre="Laptop", precio=3800.00)
-    carrito.agregar_producto(producto1, cantidad=1)
-    producto2 = ProductoFactory(nombre="Audifonos", precio=200.00)
-    carrito.agregar_producto(producto2, cantidad=2)
-    producto3 = ProductoFactory(nombre="Tablet", precio=800.00)
-    carrito.agregar_producto(producto3, cantidad=3)
+    # carrito = Carrito()
+    # producto1 = ProductoFactory(nombre="Laptop", precio=3800.00)
+    # carrito.agregar_producto(producto1, cantidad=1)
+    # producto2 = ProductoFactory(nombre="Audifonos", precio=200.00)
+    # carrito.agregar_producto(producto2, cantidad=2)
+    # producto3 = ProductoFactory(nombre="Tablet", precio=800.00)
+    # carrito.agregar_producto(producto3, cantidad=3)
+    assert carrito_con_productos.contar_items() > 0
 
     # Act
     criterio = 'marca'
     with pytest.raises(ValueError) as excinfo:
-        items_ordenados = carrito.obtener_items_ordenados(criterio=criterio)
+        items_ordenados = carrito_con_productos.obtener_items_ordenados(criterio=criterio)
     
     # Assert
     assert str(excinfo.value) == f"Criterio '{criterio}' invalido"
