@@ -118,7 +118,7 @@ def test_actualizar_cantidad_a_cero_remueve_producto():
     """
     # Arrange
     carrito = Carrito()
-    producto = ProductoFactory(nombre="Cargador", precio=25.00)
+    producto = ProductoFactory(nombre="Cargador", precio=25.00, stock=5)
     carrito.agregar_producto(producto, cantidad=3)
     
     # Act
@@ -159,7 +159,7 @@ def test_aplicar_descuento():
     """
     # Arrange
     carrito = Carrito()
-    producto = ProductoFactory(nombre="Tablet", precio=500.00)
+    producto = ProductoFactory(nombre="Tablet", precio=500.00, stock=3)
     carrito.agregar_producto(producto, cantidad=2)  # Total 1000
     
     # Act
@@ -258,3 +258,87 @@ def test_agregar_producto_supera_stock():
         carrito.agregar_producto(producto, cantidad=15)
     # Assert
     assert str(excinfo.value) == f"Cantidad supera a stock de {producto.nombre}, solo hay {producto.stock} unidades"
+
+
+def test_obtener_items_ordenados_nombre():
+
+    # Arrange
+    carrito = Carrito()
+    producto1 = ProductoFactory(nombre="Laptop", precio=3800.00)
+    carrito.agregar_producto(producto1, cantidad=1)
+    producto2 = ProductoFactory(nombre="Audifonos", precio=200.00)
+    carrito.agregar_producto(producto2, cantidad=2)
+    producto3 = ProductoFactory(nombre="Tablet", precio=800.00)
+    carrito.agregar_producto(producto3, cantidad=3)
+
+    # Act
+    items_ordenados = carrito.obtener_items_ordenados(criterio='nombre')
+
+    # Assert
+    assert items_ordenados[0].producto.nombre == "Audifonos"
+    assert items_ordenados[1].producto.nombre == "Laptop"
+    assert items_ordenados[2].producto.nombre == "Tablet"
+
+
+def test_obtener_items_ordenados_precio():
+
+    # Arrange
+    carrito = Carrito()
+    producto1 = ProductoFactory(nombre="Laptop", precio=3800.00)
+    carrito.agregar_producto(producto1, cantidad=1)
+    producto2 = ProductoFactory(nombre="Audifonos", precio=200.00)
+    carrito.agregar_producto(producto2, cantidad=2)
+    producto3 = ProductoFactory(nombre="Tablet", precio=800.00)
+    carrito.agregar_producto(producto3, cantidad=3)
+
+    # Act
+    items_ordenados = carrito.obtener_items_ordenados(criterio='precio')
+
+    # Assert
+    assert items_ordenados[0].producto.precio == 200
+    assert items_ordenados[1].producto.precio == 800
+    assert items_ordenados[2].producto.precio == 3800
+
+
+def test_obtener_items_ordenados_criterio_invalido():
+
+    # Arrange
+    carrito = Carrito()
+    producto1 = ProductoFactory(nombre="Laptop", precio=3800.00)
+    carrito.agregar_producto(producto1, cantidad=1)
+    producto2 = ProductoFactory(nombre="Audifonos", precio=200.00)
+    carrito.agregar_producto(producto2, cantidad=2)
+    producto3 = ProductoFactory(nombre="Tablet", precio=800.00)
+    carrito.agregar_producto(producto3, cantidad=3)
+
+    # Act
+    criterio = 'marca'
+    with pytest.raises(ValueError) as excinfo:
+        items_ordenados = carrito.obtener_items_ordenados(criterio=criterio)
+    
+    # Assert
+    assert str(excinfo.value) == f"Criterio '{criterio}' invalido"
+
+
+def prueba():
+    carrito = Carrito()
+    producto1 = ProductoFactory(nombre="Laptop", precio=3800.00)
+    carrito.agregar_producto(producto1, cantidad=1)
+    producto2 = ProductoFactory(nombre="Audifonos", precio=200.00)
+    carrito.agregar_producto(producto2, cantidad=2)
+    producto3 = ProductoFactory(nombre="Tablet", precio=800.00)
+    carrito.agregar_producto(producto3, cantidad=3)
+
+    items = carrito.obtener_items()
+    print(f"Tipo de elemento: {type(items[0])}")
+    print(f"Tipo de elemento dentro 1: {type(items[0].producto)}")
+    print(f"Tipo de elemento dentro 1 - 1: {type(items[0].producto.nombre)}")
+    print(f"Tipo de elemento dentro 1 - 1: {type(items[0].producto.precio)}")
+    print(f"Tipo de elemento dentro 2: {type(items[0].cantidad)}")
+    print(f"Items:\n {items}")
+    print("Items ordenados")
+    sort_items = carrito.obtener_items_ordenados('nombre')
+    print(sort_items)
+
+if __name__=="__main__":
+    prueba()

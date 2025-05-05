@@ -115,3 +115,15 @@ class Carrito:
             return self.aplicar_descuento(porcentaje)
         else:
             return self.calcular_total()
+
+    
+    def obtener_items_ordenados(self, criterio: str):
+        # criterios = {'nombre': 0, 'precio': 1}
+        if criterio == 'nombre':
+            sorted_items = sorted(self.items, key=lambda x:x.producto.nombre)
+            return sorted_items
+        elif criterio == 'precio':
+            sorted_items = sorted(self.items, key=lambda x:x.producto.precio)
+            return sorted_items
+        else:
+            raise ValueError(f"Criterio '{criterio}' invalido")
