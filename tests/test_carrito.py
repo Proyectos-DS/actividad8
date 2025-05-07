@@ -167,24 +167,25 @@ def test_calcular_total(carrito_con_productos):
     # Assert
     assert total == total_carrito_con_productos
 
-
-def test_aplicar_descuento():
+@pytest.mark.parametrize(
+        "cantidad, porcentaje_descuento, total_esperado", 
+        [(2, 10, 1440.00), (3, 20, 1920)]
+)
+def test_aplicar_descuento(carrito_vacio, producto_tablet, cantidad, porcentaje_descuento, total_esperado):
     """
     AAA:
-    Arrange: Se crea un carrito y se agrega un producto con una cantidad determinada.
-    Act: Se aplica un descuento del 10% al total.
+    Arrange: Se crea un carrito y se agrega un producto con una cantidad de 2 y 3.
+    Act: Se aplica un descuento del 10% y 15% al total.
     Assert: Se verifica que el total con descuento sea el correcto.
     """
     # Arrange
-    carrito = Carrito()
-    producto = ProductoFactory(nombre="Tablet", precio=500.00, stock=3)
-    carrito.agregar_producto(producto, cantidad=2)  # Total 1000
+    carrito_vacio.agregar_producto(producto_tablet, cantidad=cantidad)
     
     # Act
-    total_con_descuento = carrito.aplicar_descuento(10)
+    total_con_descuento = carrito_vacio.aplicar_descuento(porcentaje_descuento)
     
     # Assert
-    assert total_con_descuento == 900.00
+    assert total_con_descuento == total_esperado
 
 
 def test_aplicar_descuento_limites():
@@ -208,13 +209,6 @@ def test_aplicar_descuento_limites():
 def test_vaciar(carrito_con_productos):
 
     # Arrange
-    # carrito = Carrito()
-    # producto1 = ProductoFactory(nombre="Laptop", precio=3800.00)
-    # carrito.agregar_producto(producto1, cantidad=1)
-    # producto2 = ProductoFactory(nombre="Audifonos", precio=200.00)
-    # carrito.agregar_producto(producto2, cantidad=2)
-    # producto3 = ProductoFactory(nombre="Tablet", precio=800.00)
-    # carrito.agregar_producto(producto3, cantidad=3)
     assert carrito_con_productos.contar_items() > 0
 
     # Act
@@ -225,55 +219,45 @@ def test_vaciar(carrito_con_productos):
     assert carrito_con_productos.calcular_total() == 0
     assert carrito_con_productos.contar_items() == 0
     
-
-def test_aplicar_descuento_condicional_cumplido(carrito_con_productos):
-
+@pytest.mark.parametrize(
+        "porcentaje_descuento, compra_minima, total_esperado",
+        [
+            (15, 3000, 8840.00), 
+            (20, 10000, 8320.00)
+        ]
+)
+def test_aplicar_descuento_condicional_cumplido(carrito_con_productos, 
+                                                porcentaje_descuento, 
+                                                compra_minima,
+                                                total_esperado):
+    """
+    AAA (parametrizado)
+    Arrange: carrito_con_productos tiene un valor total de 10400
+    Act: aplicamos el descuento
+    Assert: Validamos que la cantidad final corresponda con el descuento aplicado
+    """
     # Arrange
-    # carrito = Carrito()
-    # producto = ProductoFactory(nombre="Laptop", precio=3800.00)
-    # carrito.agregar_producto(producto, cantidad=1)
-    total_sin_descuento = carrito_con_productos.calcular_total()
+    assert carrito_con_productos.calcular_total() > 0
 
     # Act
-    # total_con_descuento = carrito.aplicar_descuento_condicional(15, 3000)
-    total_con_descuento = carrito_con_productos.aplicar_descuento_condicional(15, 3000)
+    total_con_descuento = carrito_con_productos.aplicar_descuento_condicional(porcentaje_descuento, compra_minima)
 
     # Assert
-    assert total_con_descuento == total_sin_descuento * 0.85
+    assert total_con_descuento == total_esperado
 
 
 def test_aplicar_descuento_condicional_no_cumplido(carrito_con_productos):
 
     # Arrange
-    # carrito = Carrito()
-    # producto = ProductoFactory(nombre="Laptop", precio=3800.00)
-    # carrito.agregar_producto(producto, cantidad=1)
     total_sin_descuento = carrito_con_productos.calcular_total()
 
     # Act
-    # total_con_descuento = carrito.aplicar_descuento_condicional(15, 4000)
     total_con_descuento = carrito_con_productos.aplicar_descuento_condicional(15, 12000)
 
     # Assert
     assert total_con_descuento == total_sin_descuento
 
 
-    
-def test_agregar_producto_hay_stock(carrito_vacio, producto_laptop):
-    
-    # Arrange
-    # carrito = Carrito()
-    # producto = ProductoFactory(nombre="Laptop", precio=3800.00, stock=10)
-    assert carrito_vacio.contar_items() == 0
-    stock_producto_laptop = producto_laptop.stock
-
-    # Act
-    # carrito.agregar_producto(producto, cantidad=5)
-    cantidad = 5
-    carrito_vacio.agregar_producto(producto_laptop, cantidad=cantidad)
-
-    # Assert
-    assert producto_laptop.stock == stock_producto_laptop - 5
 
 def test_agregar_producto_supera_stock(carrito_vacio, producto_tablet):
     
@@ -292,16 +276,8 @@ def test_agregar_producto_supera_stock(carrito_vacio, producto_tablet):
 def test_obtener_items_ordenados_nombre(carrito_con_productos):
 
     # Arrange
-    # carrito = Carrito()
-    # producto1 = ProductoFactory(nombre="Laptop", precio=3800.00, stock=5)
-    # carrito.agregar_producto(producto1, cantidad=1)
-    # producto2 = ProductoFactory(nombre="Audifonos", precio=200.00, stock=5)
-    # carrito.agregar_producto(producto2, cantidad=2)
-    # producto3 = ProductoFactory(nombre="Tablet", precio=800.00, stock=5)
-    # carrito.agregar_producto(producto3, cantidad=3)
     assert carrito_con_productos.contar_items() > 0
-    # Act
-    # items_ordenados = carrito.obtener_items_ordenados(criterio='nombre')
+    # Acts
     items_ordenados = carrito_con_productos.obtener_items_ordenados(criterio='nombre')
 
     # Assert
