@@ -1,9 +1,10 @@
 # src/carrito.py
 
 class Producto:
-    def __init__(self, nombre, precio):
+    def __init__(self, nombre, precio, stock=50):
         self.nombre = nombre
         self.precio = precio
+        self.stock = stock
 
     def __repr__(self):
         return f"Producto({self.nombre}, {self.precio})"
@@ -31,9 +32,17 @@ class Carrito:
         """
         for item in self.items:
             if item.producto.nombre == producto.nombre:
-                item.cantidad += cantidad
-                return
-        self.items.append(ItemCarrito(producto, cantidad))
+                if item.producto.stock > cantidad:
+                    item.cantidad += cantidad
+                    item.producto.stock -= cantidad
+                    return
+                else:
+                    raise ValueError(f"Cantidad supera a stock de {item.producto.nombre}, solo hay {item.producto.stock} unidades")
+        if producto.stock > cantidad:
+            self.items.append(ItemCarrito(producto, cantidad))
+            producto.stock -= cantidad
+        else:
+            raise ValueError(f"Cantidad supera a stock de {producto.nombre}, solo hay {producto.stock} unidades")
 
     def remover_producto(self, producto, cantidad=1):
         """
@@ -95,3 +104,26 @@ class Carrito:
         Devuelve la lista de items en el carrito.
         """
         return self.items
+
+    def vaciar(self):
+        """Elimina todos los items de la instancia de Carrito
+        """
+        self.items = []
+
+    def aplicar_descuento_condicional(self, porcentaje, minimo):
+        if self.calcular_total() >= minimo:
+            return self.aplicar_descuento(porcentaje)
+        else:
+            return self.calcular_total()
+
+    
+    def obtener_items_ordenados(self, criterio: str):
+        # criterios = {'nombre': 0, 'precio': 1}
+        if criterio == 'nombre':
+            sorted_items = sorted(self.items, key=lambda x:x.producto.nombre)
+            return sorted_items
+        elif criterio == 'precio':
+            sorted_items = sorted(self.items, key=lambda x:x.producto.precio)
+            return sorted_items
+        else:
+            raise ValueError(f"Criterio '{criterio}' invalido")
