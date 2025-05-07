@@ -29,7 +29,7 @@ def producto_audifonos():
 
 @pytest.fixture
 def carrito_con_productos(carrito_vacio, producto_laptop, producto_tablet, producto_audifonos):
-    carrito_vacio.agregar_producto(producto_laptop, 1)
+    carrito_vacio.agregar_producto(producto_laptop, 2)
     carrito_vacio.agregar_producto(producto_tablet, 3)
     carrito_vacio.agregar_producto(producto_audifonos, 2)
     return carrito_vacio
